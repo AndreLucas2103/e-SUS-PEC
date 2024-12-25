@@ -1,18 +1,5 @@
 version: "3.7"
 services:
-  psql:
-    container_name: esus_psql
-    restart: always
-    image: postgres:13.5
-    volumes:
-      - ./data/psql_db:/var/lib/postgresql/data
-      - ./data/backups:/home
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    ports:
-      - "${POSTGRESQL_PORT}:5432"
   app:
     container_name: esus_app
     platform: linux/amd64
@@ -20,6 +7,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        - POSTGRES_URL_SERVER=${POSTGRES_URL_SERVER}
+        - POSTGRES_PORT=${POSTGRES_PORT}
         - POSTGRES_DATABASE=${POSTGRES_DB}
         - POSTGRES_USERNAME=${POSTGRES_USER}
         - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -32,22 +21,9 @@ services:
       - ./data/e-SUS:/opt/e-SUS
     ports:
       - "${APP_PORT}:8080"
-    depends_on:
-      - psql
-  cron:
-    container_name: esus_cron
-    restart: always
-    build:
-      context: cron
-      dockerfile: Dockerfile
-      args:
-        - TIMEZONE=${TIMEZONE}
-    volumes:
-      - ./cron/crontab.txt:/crontab.txt
-      - ./cron/app:/home
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - PGPASSWORD=${POSTGRES_PASSWORD}
-    depends_on:
-      - psql
+    networks:
+      - postgres
+
+networks:
+  postgres:
+    external: true
