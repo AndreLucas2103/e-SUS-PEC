@@ -6,13 +6,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - POSTGRES_URL_SERVER=${POSTGRES_URL_SERVER}
-        - POSTGRES_PORT=${POSTGRES_PORT}
-        - POSTGRES_DATABASE=${POSTGRES_DB}
-        - POSTGRES_USERNAME=${POSTGRES_USER}
-        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-        - TIMEZONE=${TIMEZONE}
+    environment:
+      POSTGRES_URL_SERVER: ${POSTGRES_URL_SERVER}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DATABASE: ${POSTGRES_DB}
+      POSTGRES_USERNAME: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TIMEZONE: ${TIMEZONE}
     stdin_open: true
     tty: true
     volumes:

@@ -4,9 +4,10 @@ echo "Inicializando configuração de data e hora..."
 ntpd -gq
 service ntp start
 
-echo "Ajustando data para $TIMEZONE ..."
-echo $TIMEZONE > /etc/timezone && \
-ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && \
+TIMEZONE_VALUE="${TIMEZONE:-America/Sao_Paulo}"
+echo "Ajustando data para ${TIMEZONE_VALUE} ..."
+echo "${TIMEZONE_VALUE}" > /etc/timezone && \
+ln -sf "/usr/share/zoneinfo/${TIMEZONE_VALUE}" /etc/localtime && \
 dpkg-reconfigure -f noninteractive tzdata
 
 echo "Inicializando sistema..."
