@@ -13,8 +13,30 @@ Baixe o jar da aplicação e execute o script de instalação para um banco de d
 wget https://arquivos.esusab.ufsc.br/PEC/mtRazOmMxfBpkEMK/5.2.28/eSUS-AB-PEC-5.2.28-Linux64.jar
 sh build.sh -f eSUS-AB-PEC-5.2.28-Linux64.jar -t
 ```
-Acesse [Live/Demo](https://pec.filipelopes.med.br) 
-Dúvidas? Colaboração? Ideias? Entre em contato pelo [WhatsApp](https://wa.me/5571986056232?text=Gostaria+de+informa%C3%A7%C3%B5es+sobre+o+projeto+PEC+SUS)
+
+## Configuração local de ambiente (runtime)
+
+As credenciais de banco **não** devem ser versionadas e são lidas apenas em runtime pelo container.
+
+1. Crie um arquivo local `.env` a partir do exemplo:
+
+```sh
+cp .env.example .env
+```
+
+2. Edite o `.env` com os dados do seu ambiente local.
+
+Variáveis obrigatórias:
+
+- `POSTGRES_URL_SERVER`
+- `POSTGRES_PORT`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `APP_PORT`
+- `TIMEZONE`
+
+> Nunca publique `.env`, `credentials.json`, `token.json` ou dumps de banco no Git.
 
 ## Alinhando conhecimentos
 
@@ -61,6 +83,14 @@ Para instalar a versão de treinamento use o argumento `-t`
 
 ```sh
 sh build.sh -f eSUS-AB-PEC-5.2.28-Linux64.jar -t
+```
+
+O `docker compose` injeta as variáveis de conexão no runtime do container; nenhuma senha é persistida em `ARG`/`ENV` da imagem Docker.
+
+Validação rápida de segurança:
+
+```sh
+./security-check.sh
 ```
 
 **Sobre a versão de Treinamento**
@@ -190,7 +220,7 @@ docker-compose up -d esus_app /opt/e-SUS/webserver/standalone.sh
 Para fazer funcionar o serviço de backup na nuvem pelo [Google Drive](https://developers.google.com/drive/api/v3/reference) ela deve estar relacionada a um Google Drive, se assim não for irá armazenar os backups apenas localmente. Para o uso de backup na nuvem é necessário:
 
 1. [Criar uma chave de Client ID Google](https://developers.google.com/drive/api/quickstart/python)
-2. Salve o arquivo json baixado com segurança e cole na pasta como `cron/app/credentials.json`
+2. Salve o arquivo json baixado com segurança em `cron/app/credentials.json` apenas localmente (arquivo ignorado pelo Git)
 3. Execute 
 ```sh
 make google-oauth
@@ -203,3 +233,27 @@ make cloud-backup
 ```
 
 As configurações de tempo de expiração de backup estão disponíveis em `env.py`
+
+## Segurança: rotação e limpeza de histórico Git
+
+Se segredos já foram publicados, faça a rotação imediata das credenciais e invalide tokens antes da limpeza de histórico.
+
+Exemplo genérico com `git filter-repo` (executar localmente com coordenação da equipe):
+
+```sh
+# 1) Remover arquivos sensíveis do histórico
+git filter-repo --path .env --invert-paths
+git filter-repo --path-glob '*.backup' --invert-paths
+git filter-repo --path-glob '*.sql' --invert-paths
+git filter-repo --path credentials.json --invert-paths
+git filter-repo --path token.json --invert-paths
+
+# 2) Forçar atualização remota de branches e tags
+git push --force-with-lease --all
+git push --force-with-lease --tags
+```
+
+Após o force-push:
+- coordenar todos os colaboradores para re-sincronizar clones locais;
+- remover imagens Docker antigas potencialmente contaminadas;
+- confirmar que novas credenciais já estão em uso.

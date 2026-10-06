@@ -3,9 +3,16 @@ data
 __pycache__
 *.pyc
 *.backup
+*.dump
+*.sql
+*.sql.gz
 .webassets-cache
 .env
+.env.*
+!.env.example
 client_secret_*.json
 credentials.json
 token.json
 venv
+.idea/
+.vscode/
